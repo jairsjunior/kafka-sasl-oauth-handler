@@ -16,7 +16,7 @@ KafkaServer {
 
 | Property | Value |
 | :-------:|:-----:|
-| listener.name.sasl_plaintext.oauthbearer.sasl.server.callback.handler.class | com.adobe.ids.dim.security.IMSAuthenticateValidatorCallbackHandler |
+| listener.name.sasl_plaintext.oauthbearer.sasl.server.callback.handler.class | com.adobe.ids.dim.security.java.IMSAuthenticateValidatorCallbackHandler |
 | sasl.enabled.mechanisms | OAUTHBEARER |
 
 
@@ -28,7 +28,7 @@ KafkaServer {
 | :-------:|:-----:|
 | security.protocol | SASL_PLAINTEXT |
 | sasl.mechanism  | OAUTHBEARER |
-| sasl.login.callback.handler.class | com.adobe.ids.dim.security.IMSAuthenticateLoginCallbackHandler |
+| sasl.login.callback.handler.class | com.adobe.ids.dim.security.java.IMSAuthenticateLoginCallbackHandler |
 
 
 * In addition, clients need to be started with following JAAS configuration. IMS token  URL depends on the environment. Client ID, client secret and client code are issued to each client when they register with IMS and are unique to each client.
@@ -46,6 +46,12 @@ KafkaClient {
 
 ## Configure REST Proxy
 * Add skinny jar that is created after building the module (kafka-sasl-oauth-handler-1.0-SNAPSHOT.jar, for example) to kafka lib directory (/usr/share/java/kafka/kafka-rest).
+* Add following property.
+
+| Property | Value |
+| :-------:|:-----:|
+| kafka.rest.resource.extension.class | com.adobe.ids.dim.security.rest.KafkaOAuthSecurityRestResourceExtension |
+
 * Start the REST Proxy with following JAAS configuration. IMS token validation URL depends on the environment.
 
 ```
