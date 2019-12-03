@@ -1,4 +1,4 @@
-FROM confluentinc/cp-enterprise-kafka:5.3.1
+FROM confluentinc/cp-kafka:5.3.1
 
 ADD libs/kafka* /usr/share/java/kafka/
 ADD config/kafka* /etc/kafka/
