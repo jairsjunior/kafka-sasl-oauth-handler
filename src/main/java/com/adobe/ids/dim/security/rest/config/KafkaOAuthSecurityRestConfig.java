@@ -59,55 +59,31 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
     }
 
     public Properties getTokenClientProps(){
+        log.info("KafkaOAuthSecurityRestConfig -- getTokenClientProps");
         final Properties properties = new Properties();
         if(!this.clientBootstrapServers.isEmpty()){
+            log.info("Client Bootstrap Server is not empty");
             properties.put("bootstrap.servers", this.clientBootstrapServers);
         }
         properties.put("sasl.mechanism", "OAUTHBEARER");
         properties.put("security.protocol", "SASL_PLAINTEXT");
-        properties.put("sasl.login.callback.handler.class", "com.adobe.ids.dim.security.restproxy.IMSAuthenticateLoginCallbackHandler");
+        properties.put("sasl.login.callback.handler.class", "com.adobe.ids.dim.security.rest.IMSAuthenticateRestCallbackHandler");
         properties.put("sasl.jaas.config", "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required  " +
-                "ims.client.code=\"" + this.jwtToken.value() + "\";");
+                "ims.access.token=\"" + this.jwtToken.value() + "\";");
         return properties;
     }
 
 
     //TODO: Other stuff to see later.. needs organization
     private static ConfigDef createBaseConfigDef() {
-        return baseKafkaRestConfigDef().
-                define(
-                        "confluent.rest.auth.propagate.method",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        (ConfigDef.Validator)ConfigDef.ValidString.in(getMountValidNames()),
-                        ConfigDef.Importance.LOW,
-                        "The mechanism used to authenticate Rest Proxy requests. When broker security is enabled, the principal from this authentication mechanism is propagated to Kafka broker requests.")
-                .define("confluent.license",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        ConfigDef.Importance.HIGH,
-                        "Confluent will issue a license key to each subscriber. The license key will be a short snippet of text that you can copy and paste. Without the license key, you can use Confluent Security Plugins for a 30-day trial period. If you are a subscriber and don't have a license key, please contact Confluent Support at support@confluent.io.")
-                .define(
-                        "confluent.metadata.bootstrap.server.urls",
-                        ConfigDef.Type.STRING,
-                        (Object)"",
-                        ConfigDef.Importance.HIGH,
-                        "Comma separated list of bootstrap metadata servers urls to which this Rest proxy connects to. For ex: http://localhost:8080,http://localhost:8081")
-                .define(
-                        "confluent.rest.auth.ssl.principal.mapping.rules",
-                        ConfigDef.Type.LIST,
-                        (Object) Collections.singletonList("DEFAULT"),
-                        ConfigDef.Importance.LOW,
-                        "A list of rules to map from the distinguished name (DN) in the client certificate to a short name principal for authentication with the Kafka broker. Rules are tested from left to right. The first rule that matches will be applied."
-                )
+        return baseKafkaRestConfigDef()
                 .define(
                         "ims.rest.client.bootstrap.servers",
                         ConfigDef.Type.STRING,
                         (Object)"",
                         ConfigDef.Importance.LOW,
                         "Comma separeted list of bootstrap servers and ports that have OAUTHBEARER SASL_PLAINTEXT configured"
-                )
-                ;
+                );
     }
 
 
