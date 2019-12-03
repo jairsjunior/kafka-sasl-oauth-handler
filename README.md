@@ -51,13 +51,3 @@ KafkaClient {
 | Property | Value |
 | :-------:|:-----:|
 | kafka.rest.resource.extension.class | com.adobe.ids.dim.security.rest.KafkaOAuthSecurityRestResourceExtension |
-
-* Start the REST Proxy with following JAAS configuration. IMS token validation URL depends on the environment.
-
-```
-KafkaServer {
-    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required
-    ims.token.validation.url="<URL>"
-    LoginStringClaim_sub="admin";
-};
-```
