@@ -9,3 +9,11 @@ target/
 
 ### Mac ###
 .DS_Store
+
+### VSCode ###
+.settings/
+.project
+.classpath
+
+### Builded Jar Files ###
+docker/**/*.jar
