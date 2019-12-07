@@ -58,22 +58,25 @@ public class OAuthFilter implements ContainerRequestFilter {
 
     private KafkaRestContext getKafkaRestContext(final String resourceType, final IMSBearerTokenJwt principal) throws IOException {
         log.info("getKafkaRestContext");
-        KafkaRestContext context;
+        final KafkaRestContext context;
+        final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
         if (principal instanceof IMSBearerTokenJwt) {
             log.info("principal is instance of IMSBearerTokenJwt");
-            KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig = null;
-            //TODO: Needs to implement the conversion of
             try {
+                log.info("create of bearerTokenKafkaRestConfig");
                 bearerTokenKafkaRestConfig = new KafkaOAuthSecurityRestConfig(this.oauthSecurityRestConfig.getOriginalProperties(), principal);
             }
             catch (RestConfigException e) {
-                throw new IOException((Throwable)e);
+                log.info("RestConfigException");
+                throw new IOException(e);
             }
+            log.info("Get context using Factory");
             context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
         } else {
             log.info("principal is not a instance of IMSBearerTokenJwt");
-            context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, this.oauthSecurityRestConfig, resourceType, false);
+            throw new IOException("Principal is not a instance of IMSBearerTokenJwt");
         }
+        log.info("context: " + context.toString());
         return context;
     }
 
@@ -81,13 +84,13 @@ public class OAuthFilter implements ContainerRequestFilter {
         log.info("getResourceType");
         if (ConsumersResource.class.equals(this.resourceInfo.getResourceClass()) || io.confluent.kafkarest.resources.ConsumersResource.class.equals(this.resourceInfo.getResourceClass())) {
             log.info("consumer");
-            return "consumer".intern();
+            return "consumer";
         }
         if (requestContext.getMethod().equals("POST")) {
             log.info("producer");
-            return "producer".intern();
+            return "producer";
         }
         log.info("admin");
-        return "admin".intern();
+        return "admin";
     }
 }
