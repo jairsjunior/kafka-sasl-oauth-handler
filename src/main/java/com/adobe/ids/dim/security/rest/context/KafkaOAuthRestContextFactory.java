@@ -3,11 +3,9 @@ package com.adobe.ids.dim.security.rest.context;
 import com.adobe.ids.dim.security.util.IMSBearerTokenJwt;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import io.confluent.kafkarest.*;
-import io.confluent.kafkarest.extension.KafkaRestContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -27,17 +25,19 @@ public class KafkaOAuthRestContextFactory {
 
     public KafkaRestContext getContext(final IMSBearerTokenJwt principal, final KafkaOAuthSecurityRestConfig kafkaRestConfig, final String resourceType, final boolean tokenAuth) {
         log.info("KafkaOAuthRestContextFactory -- getContext");
-        if (this.userToContextMap.containsKey(principal.principalName())) {
-            log.info("has userToContextMap principal: ", principal.principalName());
-            return this.userToContextMap.get(principal.principalName());
+        String principalWithResourceType = principal.principalName()+"--"+resourceType;
+        log.info("Principal With Resource Type: ", principalWithResourceType);
+        if (this.userToContextMap.containsKey(principalWithResourceType)) {
+            log.info("has userToContextMap principal: ", principalWithResourceType);
+            return this.userToContextMap.get(principalWithResourceType);
         }
-        synchronized (principal.principalName().intern()) {
-            log.info("create userToContextMap principal: ", principal.principalName());
-            final ScalaConsumersContext scalaConsumersContext = KafkaRestContextProvider.getDefaultContext().getScalaConsumersContext();
+        synchronized (principalWithResourceType) {
+            log.info("create userToContextMap principal: ", principalWithResourceType);
+            final ScalaConsumersContext scalaConsumersContext = new ScalaConsumersContext(kafkaRestConfig);
             final KafkaRestContext context = new DefaultKafkaRestContext(kafkaRestConfig, null, null, null, scalaConsumersContext);
-            this.userToContextMap.put(principal.principalName(), context);
+            this.userToContextMap.put(principalWithResourceType, context);
         }
-        return this.userToContextMap.get(principal.principalName());
+        return this.userToContextMap.get(principalWithResourceType);
     }
 
     public void clean() {
