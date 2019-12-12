@@ -72,11 +72,10 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         for(Object key : this.getOriginalProperties().keySet()){
             if (key.toString().startsWith("ims.rest.client.")){
                 localProperties.put(key.toString().replace("ims.rest.client.", ""), this.getOriginalProperties().get(key));
-                localProperties.put(key.toString().replace("ims.rest.", ""), this.getOriginalProperties().get(key));
             }
         }
-        if (this.getOriginalProperties().getProperty("ims.rest.client.sasl.mechanism") != null &&
-                this.getOriginalProperties().getProperty("ims.rest.client.sasl.mechanism").equalsIgnoreCase("OAUTHBEARER")) {
+        if (this.getOriginalProperties().getProperty("client.sasl.mechanism") != null &&
+                this.getOriginalProperties().getProperty("client.sasl.mechanism").equalsIgnoreCase("OAUTHBEARER")) {
             localProperties.put("sasl.jaas.config", "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required  " +
                     "ims.access.token=\"" + this.jwtToken.value() + "\";");
         }
@@ -84,17 +83,6 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
         properties.putAll(localProperties);
         log.info("Properties: " + properties.toString());
         return properties;
-    }
-
-    public static KafkaRestConfig newConsumerConfig(KafkaRestConfig config, ConsumerInstanceConfig instanceConfig) throws RestServerErrorException {
-        log.info("\n\n\n\n\n\n\n================================> CALL OF NEW CONSUMER CONFIG <================================\n\n\n\n\n\n\n");
-        Properties newProps = ConsumerInstanceConfig.attachProxySpecificProperties((Properties)config.getOriginalProperties().clone(), instanceConfig);
-
-        try {
-            return new KafkaRestConfig(newProps, config.getTime());
-        } catch (RestConfigException var4) {
-            throw new RestServerErrorException(String.format("Invalid configuration for new consumer: %s", newProps), Response.Status.BAD_REQUEST.getStatusCode(), var4);
-        }
     }
 
     private static ConfigDef createBaseConfigDef() {

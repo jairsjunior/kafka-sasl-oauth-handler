@@ -42,7 +42,7 @@ curl -X GET -H "Accept: application/vnd.kafka.json.v2+json" \
 #    {"key":null,"value":{"foo":"bar"},"partition":0,"offset":0,"topic":"test-topic"}
 #   ]
 
-curl -X DELETE -H "Content-Type: application/vnd.kafka.v2+json" \
-      -H "Authorization: Bearer $BEARER_TOKEN" \
-      http://localhost:8082/consumers/my_json_consumer/instances/my_consumer_instance
+# curl -X DELETE -H "Content-Type: application/vnd.kafka.v2+json" \
+#       -H "Authorization: Bearer $BEARER_TOKEN" \
+#       http://localhost:8082/consumers/my_json_consumer/instances/my_consumer_instance
 # No content in response

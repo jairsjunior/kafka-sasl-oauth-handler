@@ -67,7 +67,13 @@ public class IMSAuthenticateRestCallbackHandler implements AuthenticateCallbackH
         if(tokenCode == null){
             throw new IllegalArgumentException("Null token passed at jaasConfig file");
         }
-        IMSBearerTokenJwt token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
+        IMSBearerTokenJwt token;
+        try {
+             token = OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(tokenCode);
+        } catch (IOException e){
+            e.printStackTrace();
+            throw new IllegalArgumentException("Null token passed at jaasConfig file");
+        }
 
         log.info("Jaas file IMS Token: {}", tokenCode);
         callback.token(token);

@@ -7,6 +7,7 @@ import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.extension.KafkaRestContextProvider;
 import io.confluent.kafkarest.resources.v2.ConsumersResource;
 import io.confluent.rest.RestConfigException;
+import io.confluent.rest.exceptions.RestNotAuthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +47,16 @@ public class OAuthFilter implements ContainerRequestFilter {
         }
     }
 
-    private IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) {
+    private IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IOException {
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
-        if(authorizationHeader.startsWith(AUTHENTICATION_PREFIX)){
+        if(authorizationHeader == null){
+            throw new RestNotAuthorizedException("Authorization Bearer token not sent", 40002);
+        }
+        if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
             return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
         }else{
-            return null;
+            throw new RestNotAuthorizedException("Authorization Bearer sent not starting with " + AUTHENTICATION_PREFIX, 40004);
         }
     }
 
@@ -62,6 +66,9 @@ public class OAuthFilter implements ContainerRequestFilter {
         final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
         if (principal instanceof IMSBearerTokenJwt) {
             log.info("principal is instance of IMSBearerTokenJwt");
+            if(!OAuthRestProxyUtil.validateExpiration(principal)){
+                throw new RestNotAuthorizedException("Bearer token is expired", 40005);
+            }
             try {
                 log.info("create of bearerTokenKafkaRestConfig");
                 bearerTokenKafkaRestConfig = new KafkaOAuthSecurityRestConfig(this.oauthSecurityRestConfig.getOriginalProperties(), principal);
