@@ -25,7 +25,7 @@ public class KafkaOAuthRestContextFactory {
 
     public KafkaRestContext getContext(final IMSBearerTokenJwt principal, final KafkaOAuthSecurityRestConfig kafkaRestConfig, final String resourceType, final boolean tokenAuth) {
         log.info("KafkaOAuthRestContextFactory -- getContext");
-        String principalWithResourceType = principal.principalName()+"--"+resourceType;
+        String principalWithResourceType = principal.principalName();
         log.info("Principal With Resource Type: ", principalWithResourceType);
         if (this.userToContextMap.containsKey(principalWithResourceType)) {
             log.info("has userToContextMap principal: ", principalWithResourceType);
