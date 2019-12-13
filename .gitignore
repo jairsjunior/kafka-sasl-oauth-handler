@@ -2,6 +2,10 @@
 .idea/
 *.iml
 **/*.iml
+kafka-sasl-ims-handler.iml
+.classpath
+.project
+.settings/
 out/
 
 ### Maven ###

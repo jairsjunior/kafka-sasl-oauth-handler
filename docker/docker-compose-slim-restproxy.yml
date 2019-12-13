@@ -89,7 +89,6 @@ services:
       KAFKA_REST_LOG4J_LOGGERS: "kafka.controller=INFO,org.apache.kafka=INFO"
       KAFKA_REST_LOG4J_ROOT_LOGLEVEL: INFO
       
-      
 
 
 
