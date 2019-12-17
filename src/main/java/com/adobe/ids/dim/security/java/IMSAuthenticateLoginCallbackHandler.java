@@ -23,13 +23,13 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
 
     @Override
     public void configure(Map < String, ? > map, String saslMechanism, List < AppConfigurationEntry > jaasConfigEntries) {
-        log.info("IMSAuthenticateLoginCallbackHandler configure");
+        log.debug("IMSAuthenticateLoginCallbackHandler configure");
         if (!OAuthBearerLoginModule.OAUTHBEARER_MECHANISM.equals(saslMechanism)){
-            log.info(String.format("Unexpected SASL mechanism: %s", saslMechanism));
+            log.debug(String.format("Unexpected SASL mechanism: %s", saslMechanism));
             throw new IllegalArgumentException(String.format("Unexpected SASL mechanism: %s", saslMechanism));
         }
         if (Objects.requireNonNull(jaasConfigEntries).size() < 1 || jaasConfigEntries.get(0) == null){
-            log.info(String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
+            log.debug(String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
                     jaasConfigEntries.size()));
             throw new IllegalArgumentException(
                     String.format("Must supply exactly 1 non-null JAAS mechanism configuration (size was %d)",
@@ -48,43 +48,43 @@ public class IMSAuthenticateLoginCallbackHandler implements AuthenticateCallback
 
     @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-        log.info("IMSAuthenticateLoginCallbackHandler handle");
+        log.debug("IMSAuthenticateLoginCallbackHandler handle");
         if (!isConfigured()){
-            log.info("Callback handler not configured");
+            log.debug("Callback handler not configured");
             throw new IllegalStateException("Callback handler not configured");
         }
 
-        log.info("For each callback received on handle");
+        log.debug("For each callback received on handle");
         for (Callback callback: callbacks) {
             if (callback instanceof OAuthBearerTokenCallback){
                 try {
-                    log.info("callback is a instance of OAuthBearerTokenCallback");
+                    log.debug("callback is a instance of OAuthBearerTokenCallback");
                     handleCallback((OAuthBearerTokenCallback) callback);
                 } catch (KafkaException e) {
-                    log.info("on handleCallback");
+                    log.debug("on handleCallback");
                     throw new IOException(e.getMessage(), e);
                 }
             }else{
-                log.info("Callback is not a instance of OAuthBearerTokenCallback", callback.getClass().getName());
+                log.debug("Callback is not a instance of OAuthBearerTokenCallback", callback.getClass().getName());
                 throw new UnsupportedCallbackException(callback);
             }
         }
     }
 
     private void handleCallback(OAuthBearerTokenCallback callback) {
-        log.info("IMSAuthenticateLoginCallbackHandler handleCallback");
+        log.debug("IMSAuthenticateLoginCallbackHandler handleCallback");
         if (callback.token() != null){
-            log.info("Callback had a token already");
+            log.debug("Callback had a token already");
             throw new IllegalArgumentException("Callback had a token already");
         }
 
         IMSBearerTokenJwt token = IMSHttpCalls.getIMSToken(moduleOptions);
         if (token == null) {
-            log.info("Null token returned from server");
+            log.debug("Null token returned from server");
             throw new IllegalArgumentException("Null token returned from server");
         }
 
-        log.info("Retrieved IMS Token: {}", token.toString());
+        log.debug("Retrieved IMS Token: {}", token.toString());
         callback.token(token);
     }
 

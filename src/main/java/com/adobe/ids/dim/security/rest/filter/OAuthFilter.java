@@ -1,5 +1,8 @@
 package com.adobe.ids.dim.security.rest.filter;
 
+import com.adobe.ids.dim.security.exception.IMSException;
+import com.adobe.ids.dim.security.exception.IMSRestException;
+import com.adobe.ids.dim.security.metrics.OAuthMetrics;
 import com.adobe.ids.dim.security.util.*;
 import com.adobe.ids.dim.security.rest.config.KafkaOAuthSecurityRestConfig;
 import com.adobe.ids.dim.security.rest.context.KafkaOAuthRestContextFactory;
@@ -7,7 +10,6 @@ import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.extension.KafkaRestContextProvider;
 import io.confluent.kafkarest.resources.v2.ConsumersResource;
 import io.confluent.rest.RestConfigException;
-import io.confluent.rest.exceptions.RestNotAuthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +19,8 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import java.io.IOException;
-import java.security.Principal;
-import java.util.Optional;
 
-@Priority(5000)
+@Priority(1000)
 public class OAuthFilter implements ContainerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(OAuthFilter.class);
@@ -30,19 +30,19 @@ public class OAuthFilter implements ContainerRequestFilter {
     ResourceInfo resourceInfo;
 
     public OAuthFilter(final KafkaOAuthSecurityRestConfig oauthSecurityRestConfig) {
-        log.info("Constructor of OAuthFilter");
+        log.debug("Constructor of OAuthFilter");
         this.oauthSecurityRestConfig = oauthSecurityRestConfig;
     }
 
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-        log.info("Filter of OAuthFilter");
+        log.debug("Filter of OAuthFilter");
         if (containerRequestContext.getSecurityContext() != null) {
             final String resourceType = this.getResourceType(containerRequestContext);
-            log.info("ResourceType: " + resourceType);
+            log.debug("ResourceType: " + resourceType);
             final IMSBearerTokenJwt principal = getBearerInformation(containerRequestContext);
-            log.info("Principal: " + principal.toString());
+            log.debug("Principal: " + principal.toString());
             final KafkaRestContext context = this.getKafkaRestContext(resourceType, principal);
-            log.info("Context: " + context.toString());
+            log.debug("Context: " + context.toString());
             KafkaRestContextProvider.setCurrentContext(context);
         }
     }
@@ -50,54 +50,59 @@ public class OAuthFilter implements ContainerRequestFilter {
     private IMSBearerTokenJwt getBearerInformation(ContainerRequestContext containerRequestContext) throws IOException {
         String authorizationHeader = containerRequestContext.getHeaderString("Authorization");
         if(authorizationHeader == null){
-            throw new RestNotAuthorizedException("Authorization Bearer token not sent", 40002);
+            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
+            throw new IMSRestException(IMSRestException.BEARER_TOKEN_NOT_SENT_CODE, IMSRestException.BEARER_TOKEN_NOT_SENT_MSG);
         }
         if (authorizationHeader.startsWith(AUTHENTICATION_PREFIX)) {
             String bearer = authorizationHeader.substring(AUTHENTICATION_PREFIX.length()).trim();
             return OAuthRestProxyUtil.getIMSBearerTokenJwtFromBearer(bearer);
         }else{
-            throw new RestNotAuthorizedException("Authorization Bearer sent not starting with " + AUTHENTICATION_PREFIX, 40004);
+            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
+            throw new IMSRestException(IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_CODE, IMSRestException.BEARER_SENT_NOT_STARTING_WITH_PREFIX_MSG + AUTHENTICATION_PREFIX);
         }
     }
 
     private KafkaRestContext getKafkaRestContext(final String resourceType, final IMSBearerTokenJwt principal) throws IOException {
-        log.info("getKafkaRestContext");
+        log.debug("getKafkaRestContext");
         final KafkaRestContext context;
         final KafkaOAuthSecurityRestConfig bearerTokenKafkaRestConfig;
         if (principal instanceof IMSBearerTokenJwt) {
-            log.info("principal is instance of IMSBearerTokenJwt");
+            log.debug("principal is instance of IMSBearerTokenJwt");
             if(!OAuthRestProxyUtil.validateExpiration(principal)){
-                throw new RestNotAuthorizedException("Bearer token is expired", 40005);
+                OAuthMetrics.getInstance().incCountOfRequestsFailedExpiredToken();
+                throw new IMSRestException(IMSRestException.BEARER_TOKEN_EXPIRED_CODE, IMSRestException.BEARER_TOKEN_EXPIRED_MSG);
             }
             try {
-                log.info("create of bearerTokenKafkaRestConfig");
+                log.debug("create of bearerTokenKafkaRestConfig");
                 bearerTokenKafkaRestConfig = new KafkaOAuthSecurityRestConfig(this.oauthSecurityRestConfig.getOriginalProperties(), principal);
             }
             catch (RestConfigException e) {
-                log.info("RestConfigException");
+                log.debug("RestConfigException");
                 throw new IOException(e);
             }
-            log.info("Get context using Factory");
+            log.debug("Get context using Factory");
             context = KafkaOAuthRestContextFactory.getInstance().getContext(principal, bearerTokenKafkaRestConfig, resourceType, true);
+            OAuthMetrics.getInstance().incCountOfRequestSuccess();
         } else {
-            log.info("principal is not a instance of IMSBearerTokenJwt");
-            throw new IOException("Principal is not a instance of IMSBearerTokenJwt");
+            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
+            log.debug("principal is not a instance of IMSBearerTokenJwt");
+            throw new IMSRestException(IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_CODE, IMSRestException.BEARER_IS_NOT_INSTANCE_IMS_JWT_MSG);
         }
-        log.info("context: " + context.toString());
+        log.debug("context: " + context.toString());
         return context;
     }
 
     private String getResourceType(final ContainerRequestContext requestContext) {
-        log.info("getResourceType");
+        log.debug("getResourceType");
         if (ConsumersResource.class.equals(this.resourceInfo.getResourceClass()) || io.confluent.kafkarest.resources.ConsumersResource.class.equals(this.resourceInfo.getResourceClass())) {
-            log.info("consumer");
+            log.debug("consumer");
             return "consumer";
         }
         if (requestContext.getMethod().equals("POST")) {
-            log.info("producer");
+            log.debug("producer");
             return "producer";
         }
-        log.info("admin");
+        log.debug("admin");
         return "admin";
     }
 }

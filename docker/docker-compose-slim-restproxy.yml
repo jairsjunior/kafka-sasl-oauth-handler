@@ -40,7 +40,7 @@ services:
       KAFKA_LISTENER_NAME_SASL__PLAINTEXT_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: com.adobe.ids.dim.security.java.IMSAuthenticateValidatorCallbackHandler
       KAFKA_SASL_ENABLED_MECHANISMS: OAUTHBEARER
       #KAKFA JAAS CONFIGURATION FILE
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf -javaagent:/usr/share/java/kafka/jolokia-jvm-1.6.2-agent.jar=port=49998,host=0.0.0.0"
       ZOOKEEPER_SASL_ENABLED: "FALSE"
       #KAFKA INTERBROKER SECURITY
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: PLAINTEXT
@@ -82,12 +82,19 @@ services:
       KAFKA_REST_CLIENT_SASL_MECHANISM: OAUTHBEARER
       KAFKA_REST_CLIENT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: com.adobe.ids.dim.security.java.IMSAuthenticateLoginCallbackHandler
       KAFKA_REST_IMS_REST_CLIENT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'com.adobe.ids.dim.security.rest.IMSAuthenticateRestCallbackHandler'
-      KAFKAREST_OPTS: '-Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf'
+      KAFKAREST_OPTS: '-Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf -javaagent:/usr/share/java/kafka-rest/jolokia-jvm-1.6.2-agent.jar=port=49998,host=0.0.0.0'
       #Only need for confluentinc/kafka-rest container
       CUB_CLASSPATH: "/etc/confluent/docker/docker-utils.jar:/usr/share/java/kafka-rest/kafka-sasl-oauth-handler-1.0-SNAPSHOT-jar-with-dependencies.jar -Djava.security.auth.login.config=/etc/kafka-rest/kafka_rest_proxy_jaas.conf"
       ################################################
       KAFKA_REST_LOG4J_LOGGERS: "kafka.controller=INFO,org.apache.kafka=INFO"
       KAFKA_REST_LOG4J_ROOT_LOGLEVEL: INFO
+      
+  hawtio-jmx:
+    image: upala-corporation/hawtio-jmx
+    build: ./hawtio-jmx/
+    ports: 
+        - 8080:8080
+
       
 
 

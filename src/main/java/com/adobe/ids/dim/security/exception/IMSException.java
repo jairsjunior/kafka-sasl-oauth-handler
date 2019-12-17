@@ -7,7 +7,7 @@
  * from Adobe Systems Incorporated.
  */
 
-package com.adobe.ids.dim.security.util;
+package com.adobe.ids.dim.security.exception;
 
 public class IMSException extends Exception {
 

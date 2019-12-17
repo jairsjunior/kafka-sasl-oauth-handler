@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BEARER_TOKEN="pasteYourAccessTokenHereToTest"
+BEARER_TOKEN="pasteYourAccessTokenHere"
 
 # Produce a message using JSON with the value '{ "foo": "bar" }' to the topic test-topic
 curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" \
@@ -13,6 +13,9 @@ curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" \
 #    "offsets":[{"partition":0,"offset":0,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null
 #   }
 
+echo ""
+sleep 10
+
 # Create a consumer for JSON data, starting at the beginning of the topic's
 # log and subscribe to a topic. Then consume some data using the base URL in the first response.
 # Finally, close the consumer with a DELETE to make it leave the group and clean up
@@ -21,6 +24,9 @@ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" \
       -H "Authorization: Bearer $BEARER_TOKEN" \
       --data '{"name": "my_consumer_instance", "format": "json", "auto.offset.reset": "earliest"}' \
       http://localhost:8082/consumers/my_json_consumer
+
+
+echo ""
 
 # Expected output from preceding command
 #  {
@@ -32,6 +38,8 @@ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" --data '{"topics":
       -H "Authorization: Bearer $BEARER_TOKEN" \
       http://localhost:8082/consumers/my_json_consumer/instances/my_consumer_instance/subscription
 # No content in response
+
+echo ""
 
 curl -X GET -H "Accept: application/vnd.kafka.json.v2+json" \
       -H "Authorization: Bearer $BEARER_TOKEN" \

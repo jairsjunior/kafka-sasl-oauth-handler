@@ -9,6 +9,8 @@
 
 package com.adobe.ids.dim.security.java;
 
+import com.adobe.ids.dim.security.metrics.OAuthMetrics;
+import com.adobe.ids.dim.security.metrics.OAuthMetricsValidator;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
 import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
@@ -18,10 +20,13 @@ import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.AppConfigurationEntry;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +54,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
                             jaasConfigEntries.size()));
         this.moduleOptions = Collections.unmodifiableMap((Map < String, String > ) jaasConfigEntries.get(0).getOptions());
         configured = true;
+        registerMetrics();
     }
 
     public boolean isConfigured() {
@@ -57,6 +63,16 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
 
     @Override
     public void close() {}
+
+    public void registerMetrics(){
+        try{
+            MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+            ObjectName objectName = new ObjectName("com.adobe.ids.dim.security.app:name=OAuthMetrics");
+            platformMBeanServer.registerMBean(OAuthMetricsValidator.getInstance(), objectName);
+        }catch (Exception e){
+            log.error("Error on register MBean Server for JMX metrics");
+        }
+    }
 
     @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
@@ -97,6 +113,7 @@ public class IMSAuthenticateValidatorCallbackHandler implements AuthenticateCall
         Set<String> scopes = token.scope();
 
         if (!scopes.contains(DIM_CORE_SCOPE)) {
+            OAuthMetricsValidator.getInstance().incCountOfRequestsFailedWithoutACL();
             log.debug("Token doesn't have required scopes! We cannot accept this token");
             log.debug("Required scope is: {}", DIM_CORE_SCOPE);
             log.debug("Token has following scopes: {}", scopes);

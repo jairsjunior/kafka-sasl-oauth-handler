@@ -2,17 +2,12 @@ package com.adobe.ids.dim.security.rest.config;
 
 import com.adobe.ids.dim.security.util.IMSBearerTokenJwt;
 import io.confluent.kafkarest.KafkaRestConfig;
-import io.confluent.kafkarest.entities.ConsumerInstanceConfig;
 import io.confluent.rest.RestConfigException;
 import io.confluent.kafkarest.SystemTime;
-import io.confluent.rest.exceptions.RestServerErrorException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Properties;
 
 public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
@@ -24,50 +19,50 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
 
     public KafkaOAuthSecurityRestConfig(final Properties props, final IMSBearerTokenJwt jwtToken) throws RestConfigException {
         super(KafkaOAuthSecurityRestConfig.configDef, props, new SystemTime());
-        log.info("KafkaOAuthSecurityRestConfig -- Constructor ");
+        log.debug("KafkaOAuthSecurityRestConfig -- Constructor ");
         this.jwtToken = jwtToken;
         if(this.jwtToken != null){
-            log.info("JwtToken: ", jwtToken.toString());
+            log.debug("JwtToken: ", jwtToken.toString());
         }
     }
 
 
     public Properties getProducerProperties() {
-        log.info("KafkaOAuthSecurityRestConfig -- getProducerProperties ");
+        log.debug("KafkaOAuthSecurityRestConfig -- getProducerProperties ");
         Properties originalProps = super.getProducerProperties();
         if (this.jwtToken != null) {
             originalProps = this.getTokenClientProps(originalProps);
         }
-        log.info("originalProps: " + originalProps.toString());
+        log.debug("originalProps: " + originalProps.toString());
         return originalProps;
     }
 
 
     public Properties getConsumerProperties() {
-        log.info("KafkaOAuthSecurityRestConfig -- getConsumerProperties ");
+        log.debug("KafkaOAuthSecurityRestConfig -- getConsumerProperties ");
         Properties originalProps = super.getConsumerProperties();
         if (this.jwtToken != null) {
-            log.info("----> JWT Token not null <----");
+            log.debug("----> JWT Token not null <----");
             originalProps = getTokenClientProps(originalProps);
         }
-        log.info("originalProps: " + originalProps.toString());
+        log.debug("originalProps: " + originalProps.toString());
         return originalProps;
     }
 
 
     public Properties getAdminProperties() {
-        log.info("KafkaOAuthSecurityRestConfig -- getAdminProperties ");
+        log.debug("KafkaOAuthSecurityRestConfig -- getAdminProperties ");
         Properties originalProps = super.getAdminProperties();
         if (this.jwtToken != null) {
-            log.info("----> JWT Token not null <----");
+            log.debug("----> JWT Token not null <----");
             originalProps = getTokenClientProps(originalProps);
         }
-        log.info("originalProps: " + originalProps.toString());
+        log.debug("originalProps: " + originalProps.toString());
         return originalProps;
     }
 
     public Properties getTokenClientProps(Properties properties){
-        log.info("KafkaOAuthSecurityRestConfig -- getTokenClientProps");
+        log.debug("KafkaOAuthSecurityRestConfig -- getTokenClientProps");
         Properties localProperties = new Properties();
         for(Object key : this.getOriginalProperties().keySet()){
             if (key.toString().startsWith("ims.rest.client.")){
@@ -79,9 +74,9 @@ public final class KafkaOAuthSecurityRestConfig extends KafkaRestConfig {
             localProperties.put("sasl.jaas.config", "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required  " +
                     "ims.access.token=\"" + this.jwtToken.value() + "\";");
         }
-        log.info("LocalProperties: " + localProperties.toString());
+        log.debug("LocalProperties: " + localProperties.toString());
         properties.putAll(localProperties);
-        log.info("Properties: " + properties.toString());
+        log.debug("Properties: " + properties.toString());
         return properties;
     }
 

@@ -24,15 +24,15 @@ public class KafkaOAuthRestContextFactory {
     }
 
     public KafkaRestContext getContext(final IMSBearerTokenJwt principal, final KafkaOAuthSecurityRestConfig kafkaRestConfig, final String resourceType, final boolean tokenAuth) {
-        log.info("KafkaOAuthRestContextFactory -- getContext");
+        log.debug("KafkaOAuthRestContextFactory -- getContext");
         String principalWithResourceType = principal.principalName();
-        log.info("Principal With Resource Type: ", principalWithResourceType);
+        log.debug("Principal With Resource Type: ", principalWithResourceType);
         if (this.userToContextMap.containsKey(principalWithResourceType)) {
-            log.info("has userToContextMap principal: ", principalWithResourceType);
+            log.debug("has userToContextMap principal: ", principalWithResourceType);
             return this.userToContextMap.get(principalWithResourceType);
         }
         synchronized (principalWithResourceType) {
-            log.info("create userToContextMap principal: ", principalWithResourceType);
+            log.debug("create userToContextMap principal: ", principalWithResourceType);
             final ScalaConsumersContext scalaConsumersContext = new ScalaConsumersContext(kafkaRestConfig);
             final KafkaRestContext context = new DefaultKafkaRestContext(kafkaRestConfig, null, null, null, scalaConsumersContext);
             this.userToContextMap.put(principalWithResourceType, context);
@@ -41,7 +41,7 @@ public class KafkaOAuthRestContextFactory {
     }
 
     public void clean() {
-        log.info("KafkaOAuthRestContextFactory -- clean");
+        log.debug("KafkaOAuthRestContextFactory -- clean");
         for (final KafkaRestContext context : this.userToContextMap.values()) {
             context.shutdown();
         }

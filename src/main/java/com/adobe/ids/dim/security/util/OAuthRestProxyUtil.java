@@ -1,8 +1,9 @@
 package com.adobe.ids.dim.security.util;
 
+import com.adobe.ids.dim.security.exception.IMSRestException;
+import com.adobe.ids.dim.security.metrics.OAuthMetrics;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.confluent.rest.exceptions.RestNotAuthorizedException;
 import org.apache.kafka.common.utils.Time;
 
 import java.io.IOException;
@@ -22,8 +23,8 @@ public class OAuthRestProxyUtil {
             Map < String, Object > payloadJson = objectMapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
             token = new IMSBearerTokenJwt(payloadJson, accessToken);
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RestNotAuthorizedException("Error on decode IMSBearerToken", 40003);
+            OAuthMetrics.getInstance().incCountOfRequestFailedInvalidToken();
+            throw new IMSRestException(IMSRestException.BEARER_INVALID_TOKEN_CODE, IMSRestException.BEARER_INVALID_TOKEN_MSG);
         }
         return token;
     }

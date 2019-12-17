@@ -9,6 +9,7 @@
 
 package com.adobe.ids.dim.security.util;
 
+import com.adobe.ids.dim.security.exception.IMSException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.utils.Time;
